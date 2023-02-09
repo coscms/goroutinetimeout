@@ -1,9 +1,10 @@
-package goroutinetimeout
+package goroutinetimeout_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/coscms/goroutinetimeout"
 	"golang.org/x/net/context"
 )
 
@@ -20,7 +21,7 @@ func TestChan(t *testing.T) {
 		}
 		close(queue)
 	}
-	g := New(`TestChan`, nil, 2)
+	g := goroutinetimeout.New(`TestChan`, nil, 2)
 	f := func(v interface{}) {
 		i := v.(int)
 		time.Sleep(2 * time.Second)

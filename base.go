@@ -3,11 +3,10 @@ package goroutinetimeout
 import (
 	"context"
 	"log"
+	"time"
 )
 
-var (
-	_ BaseExecutor = &GoBase{}
-)
+var _ BaseExecutor = &goBase{}
 
 func New(taskName string, f func(), concurrent ...uint) Executor {
 	var n uint
@@ -17,20 +16,20 @@ func New(taskName string, f func(), concurrent ...uint) Executor {
 	if n < 1 {
 		n = 1
 	}
-	return &GoBase{
+	return &goBase{
 		taskName:   taskName,
 		goFunc:     f,
 		concurrent: n,
 	}
 }
 
-type GoBase struct {
+type goBase struct {
 	taskName   string
 	goFunc     func()
 	concurrent uint
 }
 
-func (g *GoBase) makeChan() (chan struct{}, func()) {
+func (g *goBase) makeChan() (chan struct{}, func()) {
 	done := make(chan struct{}, g.concurrent)
 	for i := uint(0); i < g.concurrent; i++ {
 		done <- struct{}{}
@@ -41,15 +40,31 @@ func (g *GoBase) makeChan() (chan struct{}, func()) {
 	}
 }
 
-func (g *GoBase) TaskName() string {
+func (g *goBase) TaskName() string {
 	return g.taskName
 }
 
-func (g *GoBase) setFunc(f func()) {
+func (g *goBase) setFunc(f func()) {
 	g.goFunc = f
 }
 
-func (g *GoBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func(interface{})) (context.Context, context.CancelFunc) {
+func (g *goBase) WithInterval(intervalFunc func(time.Time), interval time.Duration) Executor {
+	return &goWithInterval{
+		goBase:       g,
+		intervalFunc: intervalFunc,
+		interval:     interval,
+	}
+}
+
+func (g *goBase) WithIntervalGenerator(intervalFunc func(time.Time), intervalGenerator func(time.Time) time.Duration) Executor {
+	return &goWithIntervalGenerator{
+		goBase:            g,
+		intervalFunc:      intervalFunc,
+		intervalGenerator: intervalGenerator,
+	}
+}
+
+func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func(interface{})) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(c)
 	g.setFunc(func() {
 		v, y := <-s
@@ -62,13 +77,13 @@ func (g *GoBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func
 	return ctx, cancel
 }
 
-func (g *GoBase) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) {
+func (g *goBase) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) {
 	ctx, cancel := g.SetFuncWithChan(c, s, f)
 	g.Execute(ctx)
 	cancel()
 }
 
-func (g *GoBase) Execute(c context.Context) {
+func (g *goBase) Execute(c context.Context) {
 	done, exec := g.makeChan()
 	for {
 		select {
