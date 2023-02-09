@@ -44,10 +44,6 @@ func (g *goBase) TaskName() string {
 	return g.taskName
 }
 
-func (g *goBase) setFunc(f func()) {
-	g.goFunc = f
-}
-
 func (g *goBase) WithInterval(intervalFunc func(time.Time), interval time.Duration) Executor {
 	return &goWithInterval{
 		goBase:       g,
@@ -66,14 +62,14 @@ func (g *goBase) WithIntervalGenerator(intervalFunc func(time.Time), intervalGen
 
 func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func(interface{})) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(c)
-	g.setFunc(func() {
+	g.goFunc = func() {
 		v, y := <-s
 		if y {
 			f(v)
 		} else {
 			cancel()
 		}
-	})
+	}
 	return ctx, cancel
 }
 
