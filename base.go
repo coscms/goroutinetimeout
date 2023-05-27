@@ -60,6 +60,14 @@ func (g *goBase) WithIntervalGenerator(intervalFunc func(time.Time), intervalGen
 	}
 }
 
+func (g *goBase) WithTimeIntervalGenerator(intervalFunc func(time.Time), intervalGenerator func(time.Time) (time.Time, time.Duration)) Executor {
+	return &goWithTimeIntervalGenerator{
+		goBase:            g,
+		intervalFunc:      intervalFunc,
+		intervalGenerator: intervalGenerator,
+	}
+}
+
 func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func(interface{})) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(c)
 	g.goFunc = func() {
