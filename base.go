@@ -8,7 +8,7 @@ import (
 
 var _ BaseExecutor = &goBase{}
 
-func New(taskName string, f func(), concurrent ...uint) Executor {
+func New(taskName string, f func(), concurrent ...uint) BaseExecutor {
 	var n uint
 	if len(concurrent) > 0 {
 		n = concurrent[0]

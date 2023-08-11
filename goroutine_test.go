@@ -1,6 +1,7 @@
 package goroutinetimeout_test
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -47,4 +48,18 @@ func TestBaseAsyncPush(t *testing.T) {
 
 func TestBaseSyncPush(t *testing.T) {
 	testBase(t, false)
+}
+
+func TestTimeout(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	var i int32
+	g := goroutinetimeout.New(`TestTimeout`, func() {
+		time.Sleep(time.Second * 4)
+		i++
+	})
+	g.Execute(ctx)
+	if i > 1 {
+		panic(fmt.Sprintf(`i > 1 (%d)`, i))
+	}
 }
