@@ -81,13 +81,14 @@ func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func
 	return ctx, cancel
 }
 
-func (g *goBase) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) {
+func (g *goBase) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error {
 	ctx, cancel := g.SetFuncWithChan(c, s, f)
-	g.Execute(ctx)
+	err := g.Execute(ctx)
 	cancel()
+	return err
 }
 
-func (g *goBase) Execute(c context.Context) {
+func (g *goBase) Execute(c context.Context) error {
 	done, exec := g.makeChan()
 	for {
 		select {
@@ -95,7 +96,7 @@ func (g *goBase) Execute(c context.Context) {
 			go exec()
 		case <-c.Done():
 			log.Println(g.taskName+`:`, context.Canceled)
-			return
+			return context.Canceled
 		}
 	}
 }

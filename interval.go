@@ -14,13 +14,14 @@ type goWithInterval struct {
 	interval     time.Duration
 }
 
-func (g *goWithInterval) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) {
+func (g *goWithInterval) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error {
 	ctx, cancel := g.SetFuncWithChan(c, s, f)
-	g.Execute(ctx)
+	err := g.Execute(ctx)
 	cancel()
+	return err
 }
 
-func (g *goWithInterval) Execute(c context.Context) {
+func (g *goWithInterval) Execute(c context.Context) error {
 	done, exec := g.makeChan()
 	t := time.NewTicker(g.interval)
 	defer t.Stop()
@@ -32,7 +33,7 @@ func (g *goWithInterval) Execute(c context.Context) {
 			g.intervalFunc(tm)
 		case <-c.Done():
 			log.Println(g.taskName+`:`, context.Canceled)
-			return
+			return context.Canceled
 		}
 	}
 }

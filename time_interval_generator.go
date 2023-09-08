@@ -14,13 +14,14 @@ type goWithTimeIntervalGenerator struct {
 	intervalGenerator func(time.Time) (time.Time, time.Duration)
 }
 
-func (g *goWithTimeIntervalGenerator) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) {
+func (g *goWithTimeIntervalGenerator) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error {
 	ctx, cancel := g.SetFuncWithChan(c, s, f)
-	g.Execute(ctx)
+	err := g.Execute(ctx)
 	cancel()
+	return err
 }
 
-func (g *goWithTimeIntervalGenerator) Execute(c context.Context) {
+func (g *goWithTimeIntervalGenerator) Execute(c context.Context) error {
 	done, exec := g.makeChan()
 	next, duration := g.intervalGenerator(time.Now())
 	t := time.NewTimer(duration)
@@ -38,7 +39,7 @@ func (g *goWithTimeIntervalGenerator) Execute(c context.Context) {
 			t.Reset(duration)
 		case <-c.Done():
 			log.Println(g.taskName+`:`, context.Canceled)
-			return
+			return context.Canceled
 		}
 	}
 }

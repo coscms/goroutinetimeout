@@ -7,8 +7,8 @@ import (
 
 type Executor interface {
 	TaskName() string
-	Execute(c context.Context)
-	ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{}))
+	Execute(c context.Context) error
+	ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error
 }
 
 type BaseExecutor interface {
