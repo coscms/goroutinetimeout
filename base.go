@@ -2,6 +2,7 @@ package goroutinetimeout
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 )
@@ -95,8 +96,16 @@ func (g *goBase) Execute(c context.Context) error {
 		case <-done:
 			go exec()
 		case <-c.Done():
-			log.Println(g.taskName+`:`, context.Canceled)
-			return context.Canceled
+			log.Println(g.taskName+`:`, c.Err())
+			return c.Err()
 		}
 	}
+}
+
+func IsCanceled(err error) bool {
+	return errors.Is(err, context.Canceled)
+}
+
+func IsTimeout(err error) bool {
+	return errors.Is(err, context.DeadlineExceeded)
 }

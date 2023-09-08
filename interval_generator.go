@@ -33,8 +33,8 @@ func (g *goWithIntervalGenerator) Execute(c context.Context) error {
 			g.intervalFunc(tm)
 			t.Reset(g.intervalGenerator(tm))
 		case <-c.Done():
-			log.Println(g.taskName+`:`, context.Canceled)
-			return context.Canceled
+			log.Println(g.taskName+`:`, c.Err())
+			return c.Err()
 		}
 	}
 }

@@ -38,8 +38,8 @@ func (g *goWithTimeIntervalGenerator) Execute(c context.Context) error {
 			next, duration = g.intervalGenerator(tm)
 			t.Reset(duration)
 		case <-c.Done():
-			log.Println(g.taskName+`:`, context.Canceled)
-			return context.Canceled
+			log.Println(g.taskName+`:`, c.Err())
+			return c.Err()
 		}
 	}
 }

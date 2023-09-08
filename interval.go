@@ -32,8 +32,8 @@ func (g *goWithInterval) Execute(c context.Context) error {
 		case tm := <-t.C:
 			g.intervalFunc(tm)
 		case <-c.Done():
-			log.Println(g.taskName+`:`, context.Canceled)
-			return context.Canceled
+			log.Println(g.taskName+`:`, c.Err())
+			return c.Err()
 		}
 	}
 }
