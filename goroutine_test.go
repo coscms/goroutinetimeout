@@ -21,7 +21,7 @@ func testBase(t *testing.T, asyncPush bool) {
 		}
 		close(queue)
 	}
-	g := goroutinetimeout.New(`TestChan`, nil, 4)
+	g := goroutinetimeout.New(`TestChan`, 4)
 	f := func(v interface{}) {
 		i := v.(int)
 		time.Sleep(2 * time.Second)
@@ -54,11 +54,11 @@ func TestTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	var i int32
-	g := goroutinetimeout.New(`TestTimeout`, func() {
+	g := goroutinetimeout.New(`TestTimeout`)
+	g.Execute(ctx, func() {
 		time.Sleep(time.Second * 4)
 		i++
 	})
-	g.Execute(ctx)
 	if i > 1 {
 		panic(fmt.Sprintf(`i > 1 (%d)`, i))
 	}

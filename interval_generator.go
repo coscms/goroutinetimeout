@@ -15,14 +15,14 @@ type goWithIntervalGenerator struct {
 }
 
 func (g *goWithIntervalGenerator) ExecuteWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) error {
-	ctx, cancel := g.SetFuncWithChan(c, s, receiver)
-	err := g.Execute(ctx)
+	ctx, cancel, recv := g.SetFuncWithChan(c, s, receiver)
+	err := g.Execute(ctx, recv)
 	cancel()
 	return err
 }
 
-func (g *goWithIntervalGenerator) Execute(c context.Context) error {
-	done, recv := g.makeChan()
+func (g *goWithIntervalGenerator) Execute(c context.Context, receiver func()) error {
+	done, recv := g.makeChan(receiver)
 	t := time.NewTimer(g.intervalGenerator(time.Now()))
 	defer t.Stop()
 	for {

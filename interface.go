@@ -7,7 +7,7 @@ import (
 
 type Executor interface {
 	TaskName() string
-	Execute(c context.Context) error
+	Execute(c context.Context, recevier func()) error
 	ExecuteWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) error
 }
 

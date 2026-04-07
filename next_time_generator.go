@@ -15,14 +15,14 @@ type goWithNextTimeGenerator struct {
 }
 
 func (g *goWithNextTimeGenerator) ExecuteWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) error {
-	ctx, cancel := g.SetFuncWithChan(c, s, receiver)
-	err := g.Execute(ctx)
+	ctx, cancel, recv := g.SetFuncWithChan(c, s, receiver)
+	err := g.Execute(ctx, recv)
 	cancel()
 	return err
 }
 
-func (g *goWithNextTimeGenerator) Execute(c context.Context) error {
-	done, recv := g.makeChan()
+func (g *goWithNextTimeGenerator) Execute(c context.Context, receiver func()) error {
+	done, recv := g.makeChan(receiver)
 	next := g.nextTimeGenerator(time.Now())
 	duration := time.Until(next)
 	t := time.NewTimer(duration)

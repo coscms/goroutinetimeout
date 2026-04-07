@@ -9,7 +9,7 @@ import (
 
 var _ BaseExecutor = (*goBase)(nil)
 
-func New(taskName string, f func(), concurrent ...uint) BaseExecutor {
+func New(taskName string, concurrent ...uint) BaseExecutor {
 	var n uint
 	if len(concurrent) > 0 {
 		n = concurrent[0]
@@ -19,24 +19,22 @@ func New(taskName string, f func(), concurrent ...uint) BaseExecutor {
 	}
 	return &goBase{
 		taskName:   taskName,
-		goFunc:     f,
 		concurrent: n,
 	}
 }
 
 type goBase struct {
 	taskName   string
-	goFunc     func()
 	concurrent uint
 }
 
-func (g *goBase) makeChan() (chan struct{}, func()) {
+func (g *goBase) makeChan(recv func()) (chan struct{}, func()) {
 	done := make(chan struct{}, g.concurrent)
 	for i := uint(0); i < g.concurrent; i++ {
 		done <- struct{}{}
 	}
 	return done, func() {
-		g.goFunc()
+		recv()
 		done <- struct{}{}
 	}
 }
@@ -72,9 +70,9 @@ func (g *goBase) WithNextTimeGenerator(nextTimeGenerator func(time.Time) time.Ti
 	return a
 }
 
-func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) (context.Context, context.CancelFunc) {
+func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) (context.Context, context.CancelFunc, func()) {
 	ctx, cancel := context.WithCancel(c)
-	g.goFunc = func() {
+	return ctx, cancel, func() {
 		v, y := <-s
 		if y {
 			receiver(v)
@@ -82,18 +80,17 @@ func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, receiv
 			cancel()
 		}
 	}
-	return ctx, cancel
 }
 
 func (g *goBase) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error {
-	ctx, cancel := g.SetFuncWithChan(c, s, f)
-	err := g.Execute(ctx)
+	ctx, cancel, receiver := g.SetFuncWithChan(c, s, f)
+	err := g.Execute(ctx, receiver)
 	cancel()
 	return err
 }
 
-func (g *goBase) Execute(c context.Context) error {
-	done, recv := g.makeChan()
+func (g *goBase) Execute(c context.Context, receiver func()) error {
+	done, recv := g.makeChan(receiver)
 	for {
 		select {
 		case <-done:
