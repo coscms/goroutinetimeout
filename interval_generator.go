@@ -22,13 +22,13 @@ func (g *goWithIntervalGenerator) ExecuteWithChan(c context.Context, s <-chan in
 }
 
 func (g *goWithIntervalGenerator) Execute(c context.Context) error {
-	done, exec := g.makeChan()
+	done, recv := g.makeChan()
 	t := time.NewTimer(g.intervalGenerator(time.Now()))
 	defer t.Stop()
 	for {
 		select {
 		case <-done:
-			go exec()
+			go recv()
 		case tm := <-t.C:
 			if g.intervalFunc != nil {
 				g.intervalFunc(tm)

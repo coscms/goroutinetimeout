@@ -99,11 +99,11 @@ func (g *goBase) ExecuteWithChan(c context.Context, s <-chan interface{}, f func
 }
 
 func (g *goBase) Execute(c context.Context) error {
-	done, exec := g.makeChan()
+	done, recv := g.makeChan()
 	for {
 		select {
 		case <-done:
-			go exec()
+			go recv()
 		case <-c.Done():
 			log.Println(g.taskName+`:`, c.Err())
 			return c.Err()
