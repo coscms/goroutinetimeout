@@ -39,7 +39,7 @@ func IntervalExecute(c context.Context, executor func(time.Time) error, interval
 			if err != nil {
 				return err
 			}
-			t.Reset(intervalGenerator(tm))
+			t.Reset(intervalGenerator(time.Now()))
 		case <-c.Done():
 			return c.Err()
 		}

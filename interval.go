@@ -10,8 +10,8 @@ var _ Executor = &goWithInterval{}
 
 type goWithInterval struct {
 	*goBase
-	intervalFunc func(time.Time)
-	interval     time.Duration
+	executor func(time.Time)
+	interval time.Duration
 }
 
 func (g *goWithInterval) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error {
@@ -22,17 +22,15 @@ func (g *goWithInterval) ExecuteWithChan(c context.Context, s <-chan interface{}
 }
 
 func (g *goWithInterval) Execute(c context.Context) error {
-	done, exec := g.makeChan()
+	done, recv := g.makeChan()
 	t := time.NewTicker(g.interval)
 	defer t.Stop()
 	for {
 		select {
 		case <-done:
-			go exec()
+			go recv()
 		case tm := <-t.C:
-			if g.intervalFunc != nil {
-				g.intervalFunc(tm)
-			}
+			g.executor(tm)
 		case <-c.Done():
 			log.Println(g.taskName+`:`, c.Err())
 			return c.Err()

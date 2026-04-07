@@ -10,7 +10,7 @@ var _ Executor = (*goWithIntervalGenerator)(nil)
 
 type goWithIntervalGenerator struct {
 	*goBase
-	intervalFunc      func(time.Time)
+	executor          func(time.Time)
 	intervalGenerator func(time.Time) time.Duration
 }
 
@@ -30,10 +30,8 @@ func (g *goWithIntervalGenerator) Execute(c context.Context) error {
 		case <-done:
 			go recv()
 		case tm := <-t.C:
-			if g.intervalFunc != nil {
-				g.intervalFunc(tm)
-			}
-			t.Reset(g.intervalGenerator(tm))
+			g.executor(tm)
+			t.Reset(g.intervalGenerator(time.Now()))
 		case <-c.Done():
 			log.Println(g.taskName+`:`, c.Err())
 			return c.Err()

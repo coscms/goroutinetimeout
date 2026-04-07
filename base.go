@@ -45,35 +45,29 @@ func (g *goBase) TaskName() string {
 	return g.taskName
 }
 
-func (g *goBase) WithInterval(interval time.Duration, intervalFunc ...func(time.Time)) Executor {
+func (g *goBase) WithInterval(interval time.Duration, executor func(time.Time)) Executor {
 	a := &goWithInterval{
 		goBase:   g,
+		executor: executor,
 		interval: interval,
 	}
-	if len(intervalFunc) > 0 {
-		a.intervalFunc = intervalFunc[0]
-	}
 	return a
 }
 
-func (g *goBase) WithIntervalGenerator(intervalGenerator func(time.Time) time.Duration, intervalFunc ...func(time.Time)) Executor {
+func (g *goBase) WithIntervalGenerator(intervalGenerator func(time.Time) time.Duration, executor func(time.Time)) Executor {
 	a := &goWithIntervalGenerator{
 		goBase:            g,
+		executor:          executor,
 		intervalGenerator: intervalGenerator,
-	}
-	if len(intervalFunc) > 0 {
-		a.intervalFunc = intervalFunc[0]
 	}
 	return a
 }
 
-func (g *goBase) WithNextTimeGenerator(nextTimeGenerator func(time.Time) time.Time, intervalFunc ...func(time.Time)) Executor {
+func (g *goBase) WithNextTimeGenerator(nextTimeGenerator func(time.Time) time.Time, executor func(time.Time)) Executor {
 	a := &goWithNextTimeGenerator{
 		goBase:            g,
+		executor:          executor,
 		nextTimeGenerator: nextTimeGenerator,
-	}
-	if len(intervalFunc) > 0 {
-		a.intervalFunc = intervalFunc[0]
 	}
 	return a
 }

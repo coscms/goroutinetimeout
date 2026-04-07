@@ -10,7 +10,7 @@ var _ Executor = (*goWithNextTimeGenerator)(nil)
 
 type goWithNextTimeGenerator struct {
 	*goBase
-	intervalFunc      func(time.Time)
+	executor          func(time.Time)
 	nextTimeGenerator func(time.Time) time.Time
 }
 
@@ -22,7 +22,7 @@ func (g *goWithNextTimeGenerator) ExecuteWithChan(c context.Context, s <-chan in
 }
 
 func (g *goWithNextTimeGenerator) Execute(c context.Context) error {
-	done, exec := g.makeChan()
+	done, recv := g.makeChan()
 	next := g.nextTimeGenerator(time.Now())
 	duration := time.Until(next)
 	t := time.NewTimer(duration)
@@ -30,14 +30,12 @@ func (g *goWithNextTimeGenerator) Execute(c context.Context) error {
 	for {
 		select {
 		case <-done:
-			go exec()
+			go recv()
 		case tm := <-t.C:
 			if tm.Before(next) {
 				time.Sleep(next.Sub(tm))
 			}
-			if g.intervalFunc != nil {
-				g.intervalFunc(tm)
-			}
+			g.executor(tm)
 			next = g.nextTimeGenerator(time.Now())
 			duration = time.Until(next)
 			t.Reset(duration)
