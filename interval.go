@@ -14,8 +14,8 @@ type goWithInterval struct {
 	interval time.Duration
 }
 
-func (g *goWithInterval) ExecuteWithChan(c context.Context, s <-chan interface{}, f func(interface{})) error {
-	ctx, cancel := g.SetFuncWithChan(c, s, f)
+func (g *goWithInterval) ExecuteWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) error {
+	ctx, cancel := g.SetFuncWithChan(c, s, receiver)
 	err := g.Execute(ctx)
 	cancel()
 	return err

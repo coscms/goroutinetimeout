@@ -72,12 +72,12 @@ func (g *goBase) WithNextTimeGenerator(nextTimeGenerator func(time.Time) time.Ti
 	return a
 }
 
-func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func(interface{})) (context.Context, context.CancelFunc) {
+func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, receiver func(interface{})) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(c)
 	g.goFunc = func() {
 		v, y := <-s
 		if y {
-			f(v)
+			receiver(v)
 		} else {
 			cancel()
 		}
