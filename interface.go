@@ -13,7 +13,7 @@ type Executor interface {
 
 type BaseExecutor interface {
 	Executor
-	WithInterval(intervalFunc func(time.Time), interval time.Duration) Executor
-	WithIntervalGenerator(intervalFunc func(time.Time), intervalGenerator func(time.Time) time.Duration) Executor
-	WithTimeIntervalGenerator(intervalFunc func(time.Time), intervalGenerator func(time.Time) (time.Time, time.Duration)) Executor
+	WithInterval(interval time.Duration, intervalFunc ...func(time.Time)) Executor
+	WithIntervalGenerator(intervalGenerator func(time.Time) time.Duration, intervalFunc ...func(time.Time)) Executor
+	WithNextTimeGenerator(intervalGenerator func(time.Time) time.Time, intervalFunc ...func(time.Time)) Executor
 }

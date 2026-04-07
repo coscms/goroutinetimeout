@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var _ BaseExecutor = &goBase{}
+var _ BaseExecutor = (*goBase)(nil)
 
 func New(taskName string, f func(), concurrent ...uint) BaseExecutor {
 	var n uint
@@ -45,28 +45,37 @@ func (g *goBase) TaskName() string {
 	return g.taskName
 }
 
-func (g *goBase) WithInterval(intervalFunc func(time.Time), interval time.Duration) Executor {
-	return &goWithInterval{
-		goBase:       g,
-		intervalFunc: intervalFunc,
-		interval:     interval,
+func (g *goBase) WithInterval(interval time.Duration, intervalFunc ...func(time.Time)) Executor {
+	a := &goWithInterval{
+		goBase:   g,
+		interval: interval,
 	}
+	if len(intervalFunc) > 0 {
+		a.intervalFunc = intervalFunc[0]
+	}
+	return a
 }
 
-func (g *goBase) WithIntervalGenerator(intervalFunc func(time.Time), intervalGenerator func(time.Time) time.Duration) Executor {
-	return &goWithIntervalGenerator{
+func (g *goBase) WithIntervalGenerator(intervalGenerator func(time.Time) time.Duration, intervalFunc ...func(time.Time)) Executor {
+	a := &goWithIntervalGenerator{
 		goBase:            g,
-		intervalFunc:      intervalFunc,
 		intervalGenerator: intervalGenerator,
 	}
+	if len(intervalFunc) > 0 {
+		a.intervalFunc = intervalFunc[0]
+	}
+	return a
 }
 
-func (g *goBase) WithTimeIntervalGenerator(intervalFunc func(time.Time), intervalGenerator func(time.Time) (time.Time, time.Duration)) Executor {
-	return &goWithTimeIntervalGenerator{
+func (g *goBase) WithNextTimeGenerator(nextTimeGenerator func(time.Time) time.Time, intervalFunc ...func(time.Time)) Executor {
+	a := &goWithNextTimeGenerator{
 		goBase:            g,
-		intervalFunc:      intervalFunc,
-		intervalGenerator: intervalGenerator,
+		nextTimeGenerator: nextTimeGenerator,
 	}
+	if len(intervalFunc) > 0 {
+		a.intervalFunc = intervalFunc[0]
+	}
+	return a
 }
 
 func (g *goBase) SetFuncWithChan(c context.Context, s <-chan interface{}, f func(interface{})) (context.Context, context.CancelFunc) {

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var _ Executor = &goWithIntervalGenerator{}
+var _ Executor = (*goWithIntervalGenerator)(nil)
 
 type goWithIntervalGenerator struct {
 	*goBase
@@ -30,7 +30,9 @@ func (g *goWithIntervalGenerator) Execute(c context.Context) error {
 		case <-done:
 			go exec()
 		case tm := <-t.C:
-			g.intervalFunc(tm)
+			if g.intervalFunc != nil {
+				g.intervalFunc(tm)
+			}
 			t.Reset(g.intervalGenerator(tm))
 		case <-c.Done():
 			log.Println(g.taskName+`:`, c.Err())

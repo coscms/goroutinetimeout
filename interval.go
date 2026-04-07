@@ -30,7 +30,9 @@ func (g *goWithInterval) Execute(c context.Context) error {
 		case <-done:
 			go exec()
 		case tm := <-t.C:
-			g.intervalFunc(tm)
+			if g.intervalFunc != nil {
+				g.intervalFunc(tm)
+			}
 		case <-c.Done():
 			log.Println(g.taskName+`:`, c.Err())
 			return c.Err()
